@@ -1,5 +1,6 @@
 require("./db/connection");
 const express = require("express");
+const cors = require("cors");
 const { userRouter } = require("./routes/users");
 const { postRouter } = require("./routes/posts");
 
@@ -10,9 +11,9 @@ const app = express();
 
 //middleware
 app.use(express.json());
-
-app.use("api/nuztrack", userRouter);
-app.use("api/nuztrack", postRouter);
+app.use(cors());
+app.use(userRouter);
+app.use(postRouter);
 
 //routes/endpoints
 app.get("/health", (req, res) => {
