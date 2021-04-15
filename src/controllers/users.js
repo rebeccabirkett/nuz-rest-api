@@ -12,10 +12,15 @@ const getAllUsers = async (req, res) => {
 const addUser = async (req, res) => {
     try {
         const user = new User(req.body);
+        const token = await user.generateAuthToken();
         const returnedValue = await user.save();
-        res.status(201).send(`Successfully added new user: ${returnedValue.name}`);
+        res.status(201).send({ returnedValue, token });
     } catch (error) {
-        res.status(400).redirect("https://http.cat/400").send(error);
+        if (error.code == 11000) {
+            res.status(400).send("User already exists");
+        } else {
+            res.status(500).send("Could not connect")
+        }
     }
 };
 
@@ -27,7 +32,7 @@ const updateUser = async (req, res) => {
         console.log(user);
         res.status(200).send(user);
     } catch (error) {
-        res.status(404).redirect("https://http.cat/400").send({
+        res.status(404).redirect("https://http.cat/404").send({
             message: "user not found"
         });
     }
@@ -38,15 +43,37 @@ const deleteUser = async (req, res) => {
         const user = await User.findByIdAndDelete(req.params.id);
         res.status(200).send(user);
     } catch (error) {
-        res.status(404).redirect("https://http.cat/400").send({
+        res.status(404).redirect("https://http.cat/404").send({
             message: "user not found"
         });
     }
+};
+
+const login = async (req, res) => {
+    try {
+        const user = await User.findByCredentials(
+            req.body.email, 
+            req.body.password
+        );
+        const token = await user.generateAuthToken();
+        res.status(200).send({ user, token });
+    } catch (error) {
+        console.log(error);
+        res.status(400).send({
+            message: "Unable to login"
+        });
+    }
+};
+
+const profile = async (req, res) => {
+        res.status(200).send({ message: "profile page" });
 };
 
 module.exports = {
     getAllUsers,
     addUser,
     updateUser,
-    deleteUser
+    deleteUser,
+    login,
+    profile
 };
